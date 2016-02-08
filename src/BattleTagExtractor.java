@@ -43,11 +43,11 @@ public class BattleTagExtractor
 			
 			StringBuilder query = new StringBuilder();
 			
-			query.append("    insert into                                                  ");
-			query.append("        diablo3.leaderboards                                     ");
-			query.append("        (season, heroid, battletag, paragon, rank, riftlevel)    ");
-			query.append("    values                                                       ");
-			query.append("        (?, ?, ?, ?, ? , ?, ?)                                   ");
+			query.append("    insert into                                                             ");
+			query.append("        diablo3.leaderboards                                                ");
+			query.append("        (season, heroid, battletag, paragon, rank, riftlevel, heroclass)    ");
+			query.append("    values                                                                  ");
+			query.append("        (?, ?, ?, ?, ? , ?, ?)                                              ");
 			prepStm = connect.prepareStatement(query.toString());
 			
 			for(int season = 1; season < 5; season++)
