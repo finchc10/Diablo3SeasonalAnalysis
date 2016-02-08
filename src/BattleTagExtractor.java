@@ -47,7 +47,7 @@ public class BattleTagExtractor
 			query.append("        diablo3.leaderboard                                      ");
 			query.append("        (season, heroid, battletag, paragon, rank, riftlevel)    ");
 			query.append("    values                                                       ");
-			query.append("        (?, ?, ?, ?, ? , ?)                                      ");
+			query.append("        (?, ?, ?, ?, ? , ?, ?)                                   ");
 			prepStm = connect.prepareStatement(query.toString());
 			
 			for(int season = 1; season < 5; season++)
@@ -94,6 +94,7 @@ public class BattleTagExtractor
 									prepStm.setLong(4, paragonLvl.longValue());
 									prepStm.setLong(5, rank.longValue());
 									prepStm.setLong(6, riftLevel.longValue());
+									prepStm.setString(7, heroClass);
 									prepStm.executeUpdate();
 							    }
 							}
