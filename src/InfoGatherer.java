@@ -105,15 +105,16 @@ public class InfoGatherer
 					}
 					
 					JSONObject jsonObject = (JSONObject) parser.parse(json.toString());
+					boolean notFound = "NOTFOUND".equals((String) jsonObject.get("code"));
 					
-					if(!badSeason.equals((Long) jsonObject.get("seasonCreated")) || "NOTFOUND".equals((String) jsonObject.get("code")))
+					if(!badSeason.equals((Long) jsonObject.get("seasonCreated")) && !notFound)
 					{
 						System.out.println("Good season, write json");
 						writers.get(heroClass + "_" + season).write(json.toString() + System.getProperty("line.separator"));
 					}
 					else
 					{
-						System.err.println("Bad season, ignore");
+						System.err.println("Bad season or not found, ignore");
 					}
 					
 					System.out.println();
