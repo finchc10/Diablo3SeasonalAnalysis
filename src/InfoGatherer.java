@@ -9,6 +9,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -22,8 +24,15 @@ import org.json.simple.parser.ParseException;
 
 public class InfoGatherer
 {
-	private static final String jsonPath = "./src/json/season/";
-	private static final String uri      = "https://us.api.battle.net/d3/profile/Braab-1307/hero/70101120?locale=en_US&apikey=y2q8jpp27jpg7abfmpv5gs94erquqrnr";
+	private static final String jsonPath  = "./src/json/season/";
+	private static final String uri       = "https://us.api.battle.net/d3/profile/:battletag/hero/:heroid?locale=en_US&apikey=y2q8jpp27jpg7abfmpv5gs94erquqrnr";
+	private static final String BARB      = "barbarian";
+	private static final String DH        = "demon hunter";
+	private static final String CRU       = "crusader";
+	private static final String MONK      = "monk";
+	private static final String WIZ       = "wizard";
+	private static final String WD        = "witch doctor";
+	private static final String[] classes = {BARB, DH, CRU, MONK, WIZ, WD};
 	
 	//Request for Truffl-1586 : 62840373 success
 	
@@ -40,6 +49,7 @@ public class InfoGatherer
     
     public void gather()
     {
+    	HashMap<String, FileWriter> writers = new HashMap<String, FileWriter>();
 		Connection        connect = null;
 		PreparedStatement prepStm = null;
 		ResultSet         results = null;
@@ -50,32 +60,29 @@ public class InfoGatherer
 			Class.forName("com.mysql.jdbc.Driver");
 			
 			connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/diablo3?user=cory&password=woodelf1");
-			prepStm = connect.prepareStatement("select season, heroid, battletag from leaderboards order by season, heroclass");
+			prepStm = connect.prepareStatement("select season, heroid, battletag, heroclass from leaderboards order by season, heroclass");
 			results = prepStm.executeQuery();
 			HttpClient client = HttpClientBuilder.create().build();
 			JSONParser parser = new JSONParser();
 			Long       badSeason = new Long(5);
 			
-			File season1 = new File(jsonPath + "1/characters.json");
-			File season2 = new File(jsonPath + "2/characters.json");
-			File season3 = new File(jsonPath + "3/characters.json");
-			File season4 = new File(jsonPath + "4/characters.json");
+			for(int seasn = 1; seasn < 5; seasn++)
+			{
+				for(int heroClass = 0; heroClass < classes.length; heroClass++)
+				{
+					File jsonOutput = new File(jsonPath + seasn + "/characters_" + classes[heroClass] + ".json");
+					jsonOutput.createNewFile();
+					FileWriter writer = new FileWriter(jsonOutput);
+					writers.put(classes[heroClass] + "_" + seasn, writer);
+				}
+			}
 			
-			season1.createNewFile();
-			season2.createNewFile();
-			season3.createNewFile();
-			season4.createNewFile();
-			
-			FileWriter s1 = new FileWriter(season1);
-			FileWriter s2 = new FileWriter(season2);
-			FileWriter s3 = new FileWriter(season3);
-			FileWriter s4 = new FileWriter(season4);
-			
-		    while (results.next() && requests < 30001)
+		    while (results.next() && requests < 36000)
 		    {
 		        String battleTag = results.getString("battletag").replaceFirst("#", "-");
 		        String heroID    = Integer.toString(results.getInt("heroid"));
 		        int    season    = results.getInt("season");
+		        String heroClass = results.getString("heroclass");
 		        
 				String uri = InfoGatherer.uri.replaceAll(":battletag", battleTag).replaceAll(":heroid", heroID);
 				HttpGet request = new HttpGet(uri);
@@ -99,16 +106,10 @@ public class InfoGatherer
 					
 					JSONObject jsonObject = (JSONObject) parser.parse(json.toString());
 					
-					if(!badSeason.equals((Long) jsonObject.get("seasonCreated")))
+					if(!badSeason.equals((Long) jsonObject.get("seasonCreated")) || "NOTFOUND".equals((String) jsonObject.get("code")))
 					{
 						System.out.println("Good season, write json");
-						switch(season)
-						{
-						    case 1: s1.write(json.toString()); break;
-						    case 2: s2.write(json.toString()); break;
-						    case 3: s3.write(json.toString()); break;
-						    case 4: s4.write(json.toString()); break;
-						}
+						writers.get(heroClass + "_" + season).write(json.toString() + System.getProperty("line.separator"));
 					}
 					else
 					{
@@ -123,10 +124,12 @@ public class InfoGatherer
 				requests++;
 		    }
 		    
-		    s1.close();
-		    s2.close();
-		    s3.close();
-		    s4.close();
+		    Iterator<String> itr = writers.keySet().iterator();
+		    
+		    while(itr.hasNext())
+		    {
+		    	writers.get(itr.next()).close();
+		    }
 		}
 		catch (ClassNotFoundException e)
 		{
