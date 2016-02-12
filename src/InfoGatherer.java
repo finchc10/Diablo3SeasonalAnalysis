@@ -77,7 +77,7 @@ public class InfoGatherer
 				}
 			}
 			
-		    while (results.next() && requests < 36000)
+		    while (results.next())
 		    {
 		        String battleTag = results.getString("battletag").replaceFirst("#", "-");
 		        String heroID    = Integer.toString(results.getInt("heroid"));
@@ -85,46 +85,59 @@ public class InfoGatherer
 		        String heroClass = results.getString("heroclass");
 		        
 				String uri = InfoGatherer.uri.replaceAll(":battletag", battleTag).replaceAll(":heroid", heroID);
-				HttpGet request = new HttpGet(uri);
-				request.addHeader("accept", "application/json");
-				
-				HttpResponse response = client.execute(request);
-				
-				if(response.getStatusLine().getStatusCode() == 200)
+				try
 				{
-					System.out.println("Request for " + battleTag + " : " + heroID + " success");
+					HttpGet request = new HttpGet(uri);
+					request.addHeader("accept", "application/json");
 					
-					BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+					HttpResponse response = client.execute(request);
 					
-					String line = "";
-					StringBuilder json = new StringBuilder();
-					
-					while ((line = rd.readLine()) != null) 
+					if(response.getStatusLine().getStatusCode() == 200)
 					{
-						json.append(line);
-					}
-					
-					JSONObject jsonObject = (JSONObject) parser.parse(json.toString());
-					boolean notFound = "NOTFOUND".equals((String) jsonObject.get("code"));
-					
-					if(!badSeason.equals((Long) jsonObject.get("seasonCreated")) && !notFound)
-					{
-						System.out.println("Good season, write json");
-						writers.get(heroClass + "_" + season).write(json.toString() + System.getProperty("line.separator"));
+						System.out.println("Request for " + battleTag + " : " + heroID + " success");
+						
+						BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+						
+						String line = "";
+						StringBuilder json = new StringBuilder();
+						
+						while ((line = rd.readLine()) != null) 
+						{
+							json.append(line);
+						}
+						
+						JSONObject jsonObject = (JSONObject) parser.parse(json.toString());
+						boolean notFound = "NOTFOUND".equals((String) jsonObject.get("code"));
+						
+						if(!badSeason.equals((Long) jsonObject.get("seasonCreated")) && !notFound)
+						{
+							System.out.println("Good season, write json");
+							writers.get(heroClass + "_" + season).write(json.toString() + System.getProperty("line.separator"));
+						}
+						else
+						{
+							System.err.println("Bad season or not found, ignore");
+						}
+						
+						System.out.println();
+						
+						rd.close();
 					}
 					else
 					{
-						System.err.println("Bad season or not found, ignore");
+						request.abort();
+						System.err.println("No response");
 					}
 					
-					System.out.println();
-					
-					rd.close();
+					requests++;
 				}
-				
-				requests++;
+				catch(IllegalArgumentException e)
+				{
+					
+				}
 		    }
 		    
+		    System.out.println(requests);
 		    Iterator<String> itr = writers.keySet().iterator();
 		    
 		    while(itr.hasNext())
