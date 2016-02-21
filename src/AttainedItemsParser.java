@@ -24,7 +24,7 @@ import com.google.gson.JsonParser;
 
 public class AttainedItemsParser{
 	
-	public static final String ITEM_DIRECTORY = "D:\\mars-ws\\DW\\src\\json\\items";
+	public static final String ITEM_DIRECTORY = "D:\\mars-ws\\DW\\src\\json\\items\\tooltips";
 	public static final String SEASON_DIRECTORY = "D:\\mars-ws\\DW\\src\\json\\season";
 	private final static String[] itemSlots = {"head", "torso", "feet", "hands", "shoulders", "legs", "bracers", "mainHand", "waist", "rightFinger", "leftFinger", "neck", "offHand"};
 	private final static int MAX_NUM_API_REQUEST_PER_HOUR = 36000;
@@ -108,7 +108,7 @@ public class AttainedItemsParser{
 					if(jsonItems.has(itemSlot)){
 						itemid  = jsonItems.get(itemSlot).getAsJsonObject().get("id").toString();
 						tooltip  = jsonItems.get(itemSlot).getAsJsonObject().get("tooltipParams").toString();
-						tooltip = tooltip.substring(tooltip.indexOf("item/"), tooltip.length()); // strip "item/". It is not necessary for the http request later.
+						tooltip = tooltip.substring(6, tooltip.length()); // strip "item/". It is not necessary for the http request later.
 						item = new AttainedItem(heroid, itemid, tooltip);
 						result.add(item);
 					}
