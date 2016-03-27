@@ -5,11 +5,9 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -24,7 +22,7 @@ import com.google.gson.JsonParser;
 
 public class AttainedItemsParser{
 	
-	public static final String ITEM_DIRECTORY = "D:\\mars-ws\\DW\\src\\json\\items\\tooltips";
+	public static final String TOOLTIP_DIRECTORY = "D:\\mars-ws\\DW\\src\\json\\items\\tooltips";
 	public static final String SEASON_DIRECTORY = "D:\\mars-ws\\DW\\src\\json\\season";
 	private final static String[] itemSlots = {"head", "torso", "feet", "hands", "shoulders", "legs", "bracers", "mainHand", "waist", "rightFinger", "leftFinger", "neck", "offHand"};
 	private final static int MAX_NUM_API_REQUEST_PER_HOUR = 36000;
@@ -60,7 +58,7 @@ public class AttainedItemsParser{
 		AttainedItem item;
 		int itemDataCount = 0;
 		for(int fileCount=1; itemDataCount < itemData.size()-1; fileCount++){
-			jsonFile = new File(ITEM_DIRECTORY+"\\items-"+fileCount+".json");
+			jsonFile = new File(TOOLTIP_DIRECTORY+"\\items-"+fileCount+".json");
 			if(jsonFile.exists())
 				jsonFile.delete();
 			jsonFile.createNewFile();
@@ -188,8 +186,8 @@ public class AttainedItemsParser{
 			String result;
 			result = "";
 			result += "{\"heroid\":\""+heroId+"\","+
-					  " \"itemId\":\""+itemId+"\","+
-					  " \"tooltip\":\""+itemToolTip+"\"}\n";
+					  " \"itemId\":"+itemId+","+
+					  " \"tooltip\":\""+itemToolTip+"}\n";
 			return result;
 		}
 	}
